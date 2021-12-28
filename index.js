@@ -97,6 +97,17 @@ async function run() {
 			res.send(placeList);
 		});
 
+		// an api to get only one place item
+		app.get('/place/:_id', async (req, res) => {
+			const _id = req.params._id;
+
+			const filter = { _id: ObjectId(_id) };
+
+			const place = await placeCollection.findOne(filter);
+
+			res.send(place);
+		});
+
 		// an api to store single place item
 		app.post('/place', async (req, res) => {
 			const place = req.body;
