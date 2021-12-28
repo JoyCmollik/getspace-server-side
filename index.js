@@ -55,8 +55,56 @@ async function run() {
 		client.connect();
 
 		// initializing database & collections
-		const database = client.db('featureRequestBoard');
+		const database = client.db('getSpace');
 		const userCollection = database.collection('users');
+		const placeCollection = database.collection('places');
+
+		///// USERS collection CRUD operation /////
+
+		// storing user with registration process
+		app.post('/user', async (req, res) => {
+			const user = req.body;
+			console.log(user);
+			const result = await userCollection.insertOne(user);
+
+			res.send(result);
+		});
+
+		// storing user signed in with google
+		app.put('/user', async (req, res) => {
+			const user = req.body;
+			console.log(user);
+
+			const filter = { email: user.email };
+			const options = { upsert: true };
+			const updateUser = { $set: user };
+			const result = await userCollection.updateOne(
+				filter,
+				updateUser,
+				options
+			);
+
+			res.json(result);
+		});
+
+		///// PLACE collection CRUD operation /////
+		// an api to get all of the places
+		app.get('/place', async (req, res) => {
+			const cursor = placeCollection.find();
+
+			const placeList = await cursor.toArray();
+
+			res.send(placeList);
+		});
+
+		// an api to store single place item
+		app.post('/place', async (req, res) => {
+			const place = req.body;
+
+			const result = await placeCollection.insertOne(place);
+
+			res.send(result);
+		});
 	} finally {
 		await client.close();
 	}
