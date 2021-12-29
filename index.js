@@ -17,13 +17,6 @@ const fileUpload = require('express-fileupload');
 
 const port = process.env.PORT || 5000;
 
-// feature-request-board-firebase-adminsdk
-// const serviceAccount = require('./feature-request-board-firebase-adminsdk.json');
-
-// admin.initializeApp({
-// 	credential: admin.credential.cert(serviceAccount),
-// });
-
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -36,20 +29,6 @@ const client = new MongoClient(uri, {
 	useUnifiedTopology: true,
 });
 
-// middleware for token verification
-// async function verifyToken(req, res, next) {
-// 	if (req?.headers?.authorization?.startsWith('Bearer ')) {
-// 		const token = req.headers.authorization.split(' ')[1];
-
-// 		try {
-// 			const decodedUser = await admin.auth().verifyIdToken(token);
-// 			req.decodedEmail = decodedUser.email;
-// 		} catch {}
-// 	}
-
-// 	next();
-// }
-
 async function run() {
 	try {
 		client.connect();
@@ -58,6 +37,7 @@ async function run() {
 		const database = client.db('getSpace');
 		const userCollection = database.collection('users');
 		const placeCollection = database.collection('places');
+		const reservationCollection = database.collection('reservations');
 
 		///// USERS collection CRUD operation /////
 
@@ -88,6 +68,7 @@ async function run() {
 		});
 
 		///// PLACE collection CRUD operation /////
+
 		// an api to get all of the places
 		app.get('/place', async (req, res) => {
 			const cursor = placeCollection.find();
@@ -113,6 +94,27 @@ async function run() {
 			const place = req.body;
 
 			const result = await placeCollection.insertOne(place);
+
+			res.send(result);
+		});
+
+		///// RESERVATION collection CRUD operation /////
+
+		// an api to send all of the client reservations
+		app.get('/reservation/:uid', async (req, res) => {
+			const uid = req.params.uid;
+			const query = { client_uid: uid };
+			const cursor = reservationCollection.find(query);
+			const foundReservations = await cursor.toArray();
+
+			res.json(foundReservations);
+		});
+
+		// an api to store single reservation item
+		app.post('/reservation', async (req, res) => {
+			const reservation = req.body;
+
+			const result = await reservationCollection.insertOne(reservation);
 
 			res.send(result);
 		});
